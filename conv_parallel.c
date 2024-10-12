@@ -2,14 +2,27 @@
 #include <stdlib.h>
 #include <omp.h>
 
-void parallel_convolution(int *A, int *F, int *R, int NA, int NF) {
-    #pragma omp parallel for
-    for (int i = 0; i <= NA - NF; i++) {
-        int sum_result = 0;
-        for (int j = 0; j < NF; j++) {
-            sum_result += A[i + j] * F[NF - j - 1];
+#define CHUNK_SIZE 64
+
+void parallel_convolution(const int *A, const int *F, int *R, int NA, int NF) {
+    #pragma omp parallel num_threads(4)
+    {
+        #pragma omp for schedule(guided)
+        for (int i = 0; i <= NA - NF; i++) {
+            int sum_result = 0;
+            int j;
+            for (j = 0; j < NF - 3; j += 4) {
+                sum_result += A[i + j] * F[NF - j - 1];
+                sum_result += A[i + j + 1] * F[NF - (j + 1) - 1];
+                sum_result += A[i + j + 2] * F[NF - (j + 2) - 1];
+                sum_result += A[i + j + 3] * F[NF - (j + 3) - 1];
+            }
+            
+            for (; j < NF; j++) {
+                sum_result += A[i + j] * F[NF - j - 1];
+            }
+            R[i] = sum_result;
         }
-        R[i] = sum_result;
     }
 }
 
@@ -28,11 +41,9 @@ int main() {
         scanf("%d", &F[i]);
     }
 
-    double start_time = omp_get_wtime();
+    
     parallel_convolution(A, F, R, NA, NF);
-    double end_time = omp_get_wtime();
-
-    //printf("Parallel Convolution time: %.6f seconds\n", end_time - start_time);
+    
     for (int i = 0; i < NA - NF + 1; i++) {
          printf("%d\n", R[i]);
     }
