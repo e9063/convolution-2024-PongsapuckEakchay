@@ -36,9 +36,9 @@ int main() {
     
     sequential_convolution(A, F, R, NA, NF);
     
-    // for (int i = 0; i < NA - NF + 1; i++) {
-    //      printf("%d\n", R[i]);
-    // }
+    for (int i = 0; i < NA - NF + 1; i++) {
+         printf("%d\n", R[i]);
+    }
     free(A);
     free(F);
     free(R);
